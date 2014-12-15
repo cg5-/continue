@@ -1,0 +1,15 @@
+
+gEach (gRange(1, 101), {n ->
+	switch (true, {
+		case! (n % 3 == 0 && n % 5 == 0, {
+			println "FizzBuzz";
+		});
+		case! (n % 3 == 0, {
+			println "Fizz";
+		});
+		case! (n % 5 == 0, {
+			println "Buzz";	
+		});
+		println n;
+	});
+});

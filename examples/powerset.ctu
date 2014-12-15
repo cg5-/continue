@@ -1,0 +1,9 @@
+
+// Print all subsets of {1, 2, 3, 4, 5}
+list = [1, 2, 3, 4, 5];
+quantum {
+	subset = filter(list, {
+		return! choose! [false, true];
+	});
+	println showList(subset);
+};

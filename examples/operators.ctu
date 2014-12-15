@@ -1,0 +1,12 @@
+
+square = {x ->
+	return! x * x;
+};
+
+hypotSq = {(a, b) ->
+	return! square a + square b;
+};
+
+result = hypotSq(3, 4);
+println("3^2 + 4^2 is " ++ result ++ "\n");
+println(result == 25 ? "it is true" : "no, it's false");

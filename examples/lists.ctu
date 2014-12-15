@@ -1,0 +1,22 @@
+
+list = [4, 8, 15, 16, 23, 42];
+
+println showList(list);
+
+println "printing elements until we get one > 20";
+each(list, {elem ->
+	if (elem > 20, {
+		break!;	
+	});
+
+	println elem;
+});
+
+print "mapping (*2): ";
+println showList map(list, {x -> return! x * 2;});
+
+print "filtering evens: ";
+println showList filter(list, {x -> return! x % 2 == 0;});
+
+print "sum: ";
+println reduce(list, 0, {(x, y) -> return! x + y;});

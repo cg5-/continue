@@ -1,0 +1,19 @@
+
+getNumber = funcWithErrors {
+	println "Enter a number between 0 and 100";
+	num = force! toInt(read());
+	if (num < 0 || num > 100, {
+		fail! num ++ " is not between 0 and 100";
+	});
+	return! num;
+};
+
+tryCatch ({
+	num1 = force! getNumber();
+	num2 = force! getNumber();
+	num3 = force! getNumber();
+	println("The sum of those numbers is " ++ (num1 + num2 + num3));
+}, {err ->
+	println "You did something bad :(";
+	println err;
+});

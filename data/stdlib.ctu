@@ -1,0 +1,321 @@
+
+// Basic function wrappers
+
+// Convert a block which may or may not `return!` a value
+// into a function which always `return!`s a value, which is necessary
+// to use the function call syntax.
+proc = {block ->
+	return! {arg ->
+		block arg >>
+			return as (result, _) [return! result;],
+			end [return! ();];
+	};
+};
+
+// Define a function which can call itself recursively with `recurse!`. Necessary
+// since normally functions can not normally access themselves.
+recursive = {block ->
+	return! {arg ->
+		return! runRecursive(arg, block);
+	};
+};
+
+// Basic control structures
+
+// Run a block only if `cond` is true.
+if = {(cond, ifTrue) ->
+	(cond ? ifTrue : {}) >> end;
+	return!;
+};
+
+// Run the first block if `cond` is true, and the second if `cond` is false.
+// If either block can `eval!`s a value, `ifElse` will return that value.
+ifElse = {(cond, ifTrue, ifFalse) ->
+	(cond ? ifTrue : ifFalse) >>
+		eval as (result, _) [return! result;],
+		end [return! ();];
+};
+
+// Calls a block; inside that block you can `case! (x, block)`. The first
+// `case!` in which `x == value` will have its block executed. Inside the `switch`
+// and the `case!` blocks, you can `eval!` a value, and `switch` will return that value.
+switch = {(value, block) ->
+	loop (block, {block ->
+		block >>
+			end [return! ();],
+			eval as (result, _) [return! result;],
+			case as ((x, caseBlock), cont);
+
+		if (x /= value, {
+			restart! cont;
+		});
+		caseBlock >>
+			eval as (result, _) [return! result;],
+			end [return! ();];
+	});
+};
+
+// Run a block forever, or at least until you `break!` out (or escape by a non-local `return!`).
+// You can `continue!`, and if you `break!` with a value, `forever` returns that value.
+forever = {block ->
+	loop((), {
+		block >>
+			continue [restart!;],
+			end [restart!;],
+			break as (result, _) [return! result;];
+	});
+};
+
+// IO functions
+
+// Print something to stdout.
+print = {x ->
+	print! x;
+	return!;
+};
+
+// Print something to stdout, appending a newline.
+println = {x ->
+	print! x ++ "\n";
+	return!;
+};
+
+// Read a string line from stdin. 
+read = {
+	return! read!;
+};
+
+// List functions
+
+// Lists are represented as a cons cell `(head, tail)`, with the empty list
+// being represented by `()`.
+// For example, `[1, 2, 3] == (1, (2, (3, ()))`
+
+// Run a block once for each element of a list. Inside that block, you can
+// `continue!` and `break!`. If you `break!` with a value, `each` returns that value.
+each = {(list, block) ->
+	loop (list, {list ->
+
+		if (list == (), {
+			return! ();
+		});
+
+		(x, xs) = list;
+		block x >>
+			continue [restart! xs;],
+			end [restart! xs;],
+			break as (result, _) [return! result;];
+	});
+};
+
+// Transform a list by applying the function to each element.
+map = recursive {(list, func) ->
+
+	if (list == (), {
+		return! ();	
+	});
+
+	(x, xs) = list;
+	return! (func x, recurse! (xs, func));
+};
+
+// Filter a list by keeping only those elements for which
+// the function returns true.
+filter = recursive {(list, func) ->
+
+	if (list == (), {
+		return! ();	
+	});
+
+	(x, xs) = list;
+	if (func x, {
+		return! (x, recurse! (xs, func));
+	});
+
+	return! recurse! (xs, func);
+};
+
+// Reduce a list to a single value by repeatedly calling
+// the function. For example, the sum of a list `xs` of integers is
+// `map(xs, 0, {(acc, x) -> return! acc + x;})`
+reduce = {(list, initial, func) ->
+	loop ((list, initial), {(list, initial) ->
+
+		if (list == (), {
+			return! initial;
+		});
+
+		(x, xs) = list;
+		restart! (xs, func(initial, x));
+	});
+};
+
+// Represent a list as a string.
+showList = {list ->
+	if (list == (), {
+		return! "[]";	
+	});
+
+	loop ((list, "["), {(list, string) ->
+		(x, xs) = list;
+		if (xs == (), {
+			return! string ++ x ++ "]";
+		});
+		restart! (xs, string ++ x ++ ", ");
+	});
+};
+
+// State
+
+// Run the block, giving the block access to a single
+// mutable variable. You can use `get!` to get the variable's
+// value, and `set!` to set its value. The state value is initially `()`.
+state = {block ->
+	loop ((block, (), ()), {(block, state, arg) ->
+		block arg >>
+			get as (_, cont) [restart! (cont, state, state);],
+			set as (newState, cont) [restart! (cont, newState, ());],
+			end [return!;];
+	});
+};
+
+// Generator functions
+
+// A generator is like a list which computes its values on the fly.
+// It is a block which `yield!`s values.
+
+// Given a generator, returns a pair `(elem, nextGen)` where `elem` is
+// the first value `yield!`ed from the generator, and `nextGen` is the
+// generator's continuation (another generator).
+gNext = {gen ->
+	gen >>
+		yield as pair [return! pair;],
+		end [return! ();];
+};
+
+// Run a generator to completion, calling the block for each
+// element. You can `continue!` and `break!`.
+gEach = {(gen, block) ->
+	loop (gen, {gen ->
+		pair = gNext(gen);
+
+		if (pair == (), {
+			return! ();
+		});
+
+		(elem, nextGen) = pair;
+		block elem >>
+			break as (result, _) [return! result;],
+			continue,
+			end;
+		
+		restart! nextGen;
+	});
+};
+
+// Construct a generator which yields the values in [start, start+1, ..., end-1].
+gRange = {(start, end) ->
+	return! {
+		loop (start, {n ->
+			if (n < end, {
+				yield! n;
+				restart! n + 1;
+			});
+		});
+	};
+};
+
+// Run the block `n` times. (The indexes are passed in as the block argument).
+times = {(n, block) ->
+	gEach(gRange(0, n), block);
+	return!;
+};
+
+// Construct a new generator from an old one which yields at most `n` values.
+gTake = {(gen, n) ->
+	return! {
+		state {
+			set! 0;
+			gEach (gen, {elem ->
+				if (get! >= n, {
+					break!;	
+				});
+				yield! elem;
+				set! 1 + get!;
+			});
+		};
+	};
+};
+
+// Errors
+
+// A function which might fail should return an `(ok, val)` pair;
+// a successful computation returns `(true, value)` and a failed
+// computation returns `(false, error)`. The builtin `toInt` which parses
+// a string to an integer follows this convention.
+
+// Define a function which might fail using that convention. Any value
+// which is `return!`ed is automatically wrapped in `(true, ...)` and you
+// can `fail!` with an error to return `(false, ...)`. You can use `force!`
+// on another `(ok, val)` pair; if `ok == true` then the `force!` evaluates
+// to `val` and if `ok == false` then the entire function immediately fails
+// with that error.
+funcWithErrors = {block ->
+	return! {arg ->
+		loop ((block, arg), {(block, arg) ->
+			block arg >>
+				return as (result, _) [return! (true, result);],
+				fail as (error, _) [return! (false, error);],
+				end [return! (true, ());],
+				force as ((ok, val), cont);
+
+			if (!ok, {
+				return! (false, val);
+			});
+			restart! (cont, val);
+		});
+	};
+};
+
+// Run a block, using the same `fail!` and `force!` as in `funcWithErrors`.
+// If the block fails, then the `catcher` is run with the error.
+tryCatch = {(block, catcher) ->
+	loop ((block, ()), {(block, arg) ->
+		block arg >>
+			end [return!;],
+			fail as (error, _) [
+				catcher error >> end;
+				return!;
+			],
+			force as ((ok, val), cont);
+
+		if (!ok, {
+			catcher val >> end;
+			return!;
+		});
+		restart! (cont, val);
+	});
+};
+
+// Quantum
+
+// Run a block; that block can call `choose!` on a list and
+// the block's continuation will be called will each value in the
+// list in turn. The continuation can then `choose!` again, creating multiple
+// nested branches. Helpful for generating all possible combinations
+// of things. The block can `destroy!` to end a branch of the computation early.
+quantum = {block ->
+	runRecursive((block, ()), {(block, arg) ->
+		block arg >>
+			end [return!;],
+			destroy [return!;],
+			choose as (list, cont);
+
+		each(list, {elem ->
+			recurse! (cont, elem);
+		});
+
+		return!;
+	});
+	return!;
+};

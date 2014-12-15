@@ -1,0 +1,15 @@
+
+start = {a ->
+	b = moreDataPlease!;
+	c = moreDataPlease!;
+	return! (a, b, c);
+};
+
+advance = {(gen, val) ->
+	gen(val) >> moreDataPlease as (_, cont);
+	return! cont;
+};
+
+cont1 = advance(start, 1);
+cont2 = advance(cont1, 2);
+print! cont2(3);

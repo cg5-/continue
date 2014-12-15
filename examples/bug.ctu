@@ -1,0 +1,27 @@
+
+// This used to fail because of a bug, but it works now.
+
+wrapper = {block ->
+	println "1";
+	block >> pause as (_, block);
+	println "2";
+	block >> pause as (_, block);
+	println "3";
+	block >> pause as (_, block);
+	println "4";
+	block >> pause as (_, block);
+	println "5";
+	block >> end;
+	return!;
+};
+
+wrapper {
+	pauseTwice = {
+		println "top of pauseTwice";
+		pause!;
+		pause!;
+		return!;
+	};
+	pauseTwice();
+	pauseTwice();
+};

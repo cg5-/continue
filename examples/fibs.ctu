@@ -1,0 +1,13 @@
+
+// Infinite generator of all fibonacci numbers
+fibs = {
+	loop ((1, 1), {(a, b) ->
+		yield! a;
+		restart! (b, a + b);
+	});
+};
+
+println "Here are the first 100 fibonacci numbers";
+gEach (gTake(fibs, 100), {x ->
+	println(x);
+});

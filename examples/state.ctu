@@ -1,0 +1,13 @@
+
+state {
+	set! 0;
+	plusplus = {
+		x = get!;
+		set! x + 1;
+		return! x;
+	};
+
+	println plusplus();
+	println plusplus();
+	println plusplus();
+};

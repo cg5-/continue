@@ -1,0 +1,13 @@
+
+println "What is your name?";
+name = read();
+println("Hello, " ++ name ++ "!");
+
+println "Type an integer";
+(ok, num) = toInt read();
+
+ifElse (ok, {
+	println("That squared is " ++ num*num ++ "!");
+}, {
+	println "That's not an integer :(";
+});

@@ -1,0 +1,48 @@
+
+oneToEight = [1, 2, 3, 4, 5, 6, 7, 8];
+
+// generator for all solutions to 8 queens problem
+eightQueens = {
+	quantum {
+		// build up a solution one row at a time
+		solution = reduce(oneToEight, [], {(alreadyPlaced, row) ->
+			// choose a column to place a queen in
+			column = choose! oneToEight;
+
+			// make sure this doesn't conflict with an existing queen placement
+			each (alreadyPlaced, {(row2, column2) ->
+				if (column == column2 || row - row2 == column - column2 || row - row2 == column2 - column, {
+					destroy!;
+				});
+			});
+
+			// add this queen placement to the candidate solution
+			// ((row, column), solution) == (row, column) : solution == prepend (row, column) to solution
+			return! ((row, column), solution);
+		});
+
+		// Found a solution, yield it from the generator.
+		yield! solution;
+	};
+};
+
+printSolution = proc {solution ->
+	// we flip the solution upside down here, but that's okay
+	// since the problem is symmetric anyway.
+	each (solution, {(_, col) ->
+		times(col - 1, {
+			print ". ";
+		});
+		print "Q ";
+		times(8 - col, {
+			print ". ";
+		});
+		print "\n";
+	});
+};
+
+// Print 5 solutions
+gEach (gTake(eightQueens, 5), {solution ->
+	printSolution solution;
+	print "\n";
+});

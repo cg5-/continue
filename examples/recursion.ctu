@@ -1,0 +1,39 @@
+
+// z combinator
+// I don't really understand how this works, I just copied it from wikipedia.
+z = {f ->
+	a = {x ->
+		b = { v -> return! ((x x) v); };
+		return! f b;
+	};
+	return! a a;
+};
+
+fac = z {fac ->
+	return! {n ->
+		if (n <= 0, {
+			return! 1;	
+		});
+		return! n * fac(n - 1);
+	};
+};
+
+println("10! computed via z-combinator: " ++ fac 10);
+
+fac10 = runRecursive(10, {n ->
+	if(n <= 0, {
+		return! 1;	
+	});
+	return! n * recurse! n - 1;
+});
+
+println("10! computed via runRecursive: " ++ fac10);
+
+terribleFibo = runRecursive(10, {n ->
+	if(n <= 2, {
+		return! 1;	
+	});
+	return! recurse!(n - 1) + recurse!(n - 2);
+});
+
+println("fibo 10 computed via terrible recursive algorithm: " ++ terribleFibo);
