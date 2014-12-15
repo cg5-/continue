@@ -187,6 +187,7 @@ state = {block ->
 // Given a generator, returns a pair `(elem, nextGen)` where `elem` is
 // the first value `yield!`ed from the generator, and `nextGen` is the
 // generator's continuation (another generator).
+// Returns () if the generator is completed.
 gNext = {gen ->
 	gen >>
 		yield as pair [return! pair;],
