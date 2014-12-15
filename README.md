@@ -159,3 +159,7 @@ not so convenient:
     };
 
 For passing data between iterations of loops, is probably easier to use `reduce`.
+
+Functions can only access functions defined strictly before them. In particular,
+functions can't directly access themselves. You can use the `recursive` function from the
+standard library to write recursive functions.
