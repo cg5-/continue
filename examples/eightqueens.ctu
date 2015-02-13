@@ -17,8 +17,8 @@ eightQueens = {
 			});
 
 			// add this queen placement to the candidate solution
-			// ((row, column), solution) == (row, column) : solution == prepend (row, column) to solution
-			return! ((row, column), solution);
+			// ((row, column), alreadyPlaced) == (row, column) : alreadyPlaced == prepend (row, column) to alreadyPlaced
+			return! ((row, column), alreadyPlaced);
 		});
 
 		// Found a solution, yield it from the generator.
